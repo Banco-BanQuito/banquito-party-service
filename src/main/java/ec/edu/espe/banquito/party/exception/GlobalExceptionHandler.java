@@ -19,4 +19,15 @@ public class GlobalExceptionHandler {
                 "message", exception.getMessage()
         );
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, Object> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", 401,
+                "error", "UNAUTHORIZED",
+                "message", exception.getMessage()
+        );
+    }
 }

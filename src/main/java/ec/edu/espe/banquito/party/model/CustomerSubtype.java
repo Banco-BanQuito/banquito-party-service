@@ -1,9 +1,12 @@
 package ec.edu.espe.banquito.party.model;
 
+import ec.edu.espe.banquito.party.enums.CustomerStatusEnum;
+import ec.edu.espe.banquito.party.enums.CustomerTypeEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
@@ -17,11 +20,29 @@ public class CustomerSubtype {
     @Column(name = "ID", nullable = false)
     private Integer id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "CUSTOMER_TYPE", nullable = false, length = 15)
+    private CustomerTypeEnum customerType;
+
     @Column(name = "NAME", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "DESCRIPTION", length = 255)
+    @Column(name = "DESCRIPTION", length = 50)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", nullable = false, length = 15)
+    private CustomerStatusEnum status;
+
+    @Column(name = "OBSERVATIONS", length = 255)
+    private String observations;
+
+    @Column(name = "CREATION_DATE", nullable = false)
+    private LocalDateTime creationDate;
+
+    @Version
+    @Column(name = "VERSION", nullable = false)
+    private Integer version;
 
     public CustomerSubtype() {
     }
@@ -48,7 +69,9 @@ public class CustomerSubtype {
     public String toString() {
         return "CustomerSubtype{" +
                 "id=" + id +
+                ", customerType=" + customerType +
                 ", name='" + name + '\'' +
+                ", status=" + status +
                 '}';
     }
 }

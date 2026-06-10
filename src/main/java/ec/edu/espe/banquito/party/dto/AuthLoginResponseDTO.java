@@ -15,18 +15,20 @@ public class AuthLoginResponseDTO {
     private CustomerTypeEnum customerType;
     private CustomerStatusEnum customerStatus;
     private String credentialStatus;
+    private boolean mustChangePassword;
 
     public AuthLoginResponseDTO() {
     }
 
     public AuthLoginResponseDTO(Integer customerId, String username, String fullName,
                                 CustomerTypeEnum customerType, CustomerStatusEnum customerStatus,
-                                String credentialStatus) {
+                                String credentialStatus, boolean mustChangePassword) {
         this.customerId = customerId;
         this.username = username;
         this.fullName = fullName;
         this.customerType = customerType;
         this.customerStatus = customerStatus;
         this.credentialStatus = credentialStatus;
+        this.mustChangePassword = mustChangePassword;
     }
 }

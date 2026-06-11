@@ -6,12 +6,15 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 @Component
 public class PartyGrpcServer {
 
+    private static final Logger log = LoggerFactory.getLogger(PartyGrpcServer.class);
     private final int port;
     private final PartyGrpcService partyGrpcService;
     private Server server;
@@ -31,7 +34,7 @@ public class PartyGrpcServer {
                 .build()
                 .start();
 
-        System.out.println("Party gRPC server started on port " + this.port);
+        log.info("Party gRPC server started on port {}", this.port);
     }
 
     @PreDestroy

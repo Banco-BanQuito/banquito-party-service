@@ -22,24 +22,4 @@ public class CustomerResponseDTO {
     private String address;
     private CustomerStatusEnum status;
 
-    public CustomerResponseDTO() {
-    }
-
-    public CustomerResponseDTO(Integer id, CustomerTypeEnum customerType, String identificationType,
-                               String identification, String firstName, String lastName,
-                               String legalName, String fullName, String email,
-                               String mobilePhone, String address, CustomerStatusEnum status) {
-        this.id = id;
-        this.customerType = customerType;
-        this.identificationType = identificationType;
-        this.identification = identification;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.legalName = legalName;
-        this.fullName = fullName;
-        this.email = email;
-        this.mobilePhone = mobilePhone;
-        this.address = address;
-        this.status = status;
-    }
 }

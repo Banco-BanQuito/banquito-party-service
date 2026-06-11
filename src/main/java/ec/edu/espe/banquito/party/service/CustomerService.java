@@ -54,22 +54,33 @@ public class CustomerService {
     }
 
     private CustomerResponseDTO buildCustomerResponse(Customer customer) {
-        String fullName = this.buildFullName(customer);
+        CustomerResponseDTO response = new CustomerResponseDTO();
 
-        return new CustomerResponseDTO(
-                customer.getId(),
-                customer.getCustomerType(),
-                customer.getIdentificationType(),
-                customer.getIdentification(),
-                customer.getFirstName(),
-                customer.getLastName(),
-                customer.getLegalName(),
-                fullName,
-                customer.getEmail(),
-                customer.getMobilePhone(),
-                customer.getAddress(),
-                customer.getStatus()
-        );
+        response.setId(customer.getId());
+        response.setCustomerType(customer.getCustomerType());
+        response.setIdentificationType(customer.getIdentificationType());
+        response.setIdentification(customer.getIdentification());
+        response.setFirstName(customer.getFirstName());
+        response.setLastName(customer.getLastName());
+        response.setLegalName(customer.getLegalName());
+
+        String fullName;
+
+        if (customer.getLegalName() != null && !customer.getLegalName().isBlank()) {
+            fullName = customer.getLegalName();
+        } else {
+            String firstName = customer.getFirstName() != null ? customer.getFirstName() : "";
+            String lastName = customer.getLastName() != null ? customer.getLastName() : "";
+            fullName = (firstName + " " + lastName).trim();
+        }
+
+        response.setFullName(fullName);
+        response.setEmail(customer.getEmail());
+        response.setMobilePhone(customer.getMobilePhone());
+        response.setAddress(customer.getAddress());
+        response.setStatus(customer.getStatus());
+
+        return response;
     }
 
     private String buildFullName(Customer customer) {

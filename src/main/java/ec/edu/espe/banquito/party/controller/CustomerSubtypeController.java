@@ -9,8 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v2/customer-subtypes")
-@RequiredArgsConstructor
-public class CustomerSubtypeController {
+@RequiredArgsConstructor@CrossOrigin(origins = "*", allowedHeaders = "*")public class CustomerSubtypeController {
 
     private final CustomerSubtypeService customerSubtypeService;
 

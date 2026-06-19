@@ -3,11 +3,15 @@ package ec.edu.espe.banquito.party.grpc;
 import ec.edu.espe.banquito.party.client.AccountLookupGrpcClient;
 import ec.edu.espe.banquito.party.grpc.accountlookup.AccountLookupResponse;
 import ec.edu.espe.banquito.party.grpc.party.AccountHolderResponse;
+import ec.edu.espe.banquito.party.grpc.party.BranchResponse;
 import ec.edu.espe.banquito.party.grpc.party.CustomerResponse;
+import ec.edu.espe.banquito.party.grpc.party.GetBranchRequest;
 import ec.edu.espe.banquito.party.grpc.party.GetCustomerByAccountRequest;
 import ec.edu.espe.banquito.party.grpc.party.GetCustomerRequest;
 import ec.edu.espe.banquito.party.grpc.party.PartyServiceGrpc;
+import ec.edu.espe.banquito.party.model.Branch;
 import ec.edu.espe.banquito.party.model.Customer;
+import ec.edu.espe.banquito.party.repository.BranchRepository;
 import ec.edu.espe.banquito.party.repository.CustomerRepository;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -20,6 +24,7 @@ public class PartyGrpcService extends PartyServiceGrpc.PartyServiceImplBase {
 
     private final CustomerRepository customerRepository;
     private final AccountLookupGrpcClient accountLookupGrpcClient;
+    private final BranchRepository branchRepository;
 
     @Override
     public void getCustomer(GetCustomerRequest request, StreamObserver<CustomerResponse> responseObserver) {
@@ -88,6 +93,30 @@ public class PartyGrpcService extends PartyServiceGrpc.PartyServiceImplBase {
                             .asRuntimeException()
             );
         }
+    }
+
+    @Override
+    public void getBranch(GetBranchRequest request, StreamObserver<BranchResponse> responseObserver) {
+        Branch branch = this.branchRepository.findById(request.getBranchId()).orElse(null);
+
+        if (branch == null) {
+            responseObserver.onError(
+                    Status.NOT_FOUND
+                            .withDescription("Sucursal no encontrada con id: " + request.getBranchId())
+                            .asRuntimeException()
+            );
+            return;
+        }
+
+        BranchResponse response = BranchResponse.newBuilder()
+                .setBranchId(branch.getId())
+                .setBranchCode(branch.getBranchCode() != null ? branch.getBranchCode() : "")
+                .setName(branch.getName() != null ? branch.getName() : "")
+                .setCity(branch.getCity() != null ? branch.getCity() : "")
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     private String buildFullName(Customer customer) {

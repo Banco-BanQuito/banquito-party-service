@@ -7,7 +7,8 @@ public enum CustomerStatusEnum {
 
     ACTIVO("ACTIVO"),
     INACTIVO("INACTIVO"),
-    BLOQUEADO("BLOQUEADO");
+    BLOQUEADO("BLOQUEADO"),
+    SUSPENDIDO("SUSPENDIDO");
 
     private final String value;
 

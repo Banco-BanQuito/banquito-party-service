@@ -1,6 +1,7 @@
 package ec.edu.espe.banquito.party.service;
 
 import ec.edu.espe.banquito.party.dto.HolidayResponseDTO;
+import ec.edu.espe.banquito.party.mapper.HolidayMapper;
 import ec.edu.espe.banquito.party.model.Holiday;
 import ec.edu.espe.banquito.party.repository.HolidayRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,15 +20,7 @@ public class HolidayService {
         return this.holidayRepository.findAll()
                 .stream()
                 .sorted(Comparator.comparing(Holiday::getHolidayDate))
-                .map(this::buildHolidayResponse)
+                .map(HolidayMapper::toResponse)
                 .toList();
-    }
-
-    private HolidayResponseDTO buildHolidayResponse(Holiday holiday) {
-        return new HolidayResponseDTO(
-                holiday.getHolidayDate(),
-                holiday.getName(),
-                holiday.getIsWeekend()
-        );
     }
 }

@@ -1,7 +1,7 @@
 package ec.edu.espe.banquito.party.service;
 
 import ec.edu.espe.banquito.party.dto.CoreParameterResponseDTO;
-import ec.edu.espe.banquito.party.model.CoreParameter;
+import ec.edu.espe.banquito.party.mapper.CoreParameterMapper;
 import ec.edu.espe.banquito.party.repository.CoreParameterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,17 +17,7 @@ public class CoreParameterService {
     public List<CoreParameterResponseDTO> findAll() {
         return this.coreParameterRepository.findAll()
                 .stream()
-                .map(this::buildCoreParameterResponse)
+                .map(CoreParameterMapper::toResponse)
                 .toList();
-    }
-
-    private CoreParameterResponseDTO buildCoreParameterResponse(CoreParameter coreParameter) {
-        return new CoreParameterResponseDTO(
-                coreParameter.getCode(),
-                coreParameter.getName(),
-                coreParameter.getValueString(),
-                coreParameter.getDataType(),
-                coreParameter.getDescription()
-        );
     }
 }

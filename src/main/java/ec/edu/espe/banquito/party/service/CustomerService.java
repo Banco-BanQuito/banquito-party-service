@@ -8,6 +8,7 @@ import ec.edu.espe.banquito.party.enums.CustomerStatusEnum;
 import ec.edu.espe.banquito.party.enums.CustomerTypeEnum;
 import ec.edu.espe.banquito.party.exception.CustomerNotFoundException;
 import ec.edu.espe.banquito.party.grpc.accountlookup.AccountLookupResponse;
+import ec.edu.espe.banquito.party.mapper.CustomerMapper;
 import ec.edu.espe.banquito.party.model.Customer;
 import ec.edu.espe.banquito.party.model.CustomerSubtype;
 import ec.edu.espe.banquito.party.repository.CustomerRepository;
@@ -61,7 +62,7 @@ public class CustomerService {
             customer.setBirthDate(request.getBirthDate());
         }
 
-        return this.buildCustomerResponse(this.customerRepository.save(customer));
+        return CustomerMapper.toResponse(this.customerRepository.save(customer));
     }
 
     @Transactional
@@ -71,7 +72,7 @@ public class CustomerService {
 
         customer.setStatus(CustomerStatusEnum.valueOf(status));
 
-        return this.buildCustomerResponse(this.customerRepository.save(customer));
+        return CustomerMapper.toResponse(this.customerRepository.save(customer));
     }
 
     public CustomerResponseDTO findByIdOrIdentification(String value) {
@@ -86,7 +87,7 @@ public class CustomerService {
                     .orElseThrow(() -> new CustomerNotFoundException("Cliente no encontrado con identificación: " + value));
         }
 
-        return this.buildCustomerResponse(customer);
+        return CustomerMapper.toResponse(customer);
     }
 
     public CustomerByAccountResponseDTO findCustomerByAccountNumber(String accountNumber) {
@@ -97,7 +98,7 @@ public class CustomerService {
         Customer customer = this.customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("Cliente no encontrado con id: " + customerId));
 
-        String fullName = this.buildFullName(customer);
+        String fullName = CustomerMapper.buildFullName(customer);
 
         return new CustomerByAccountResponseDTO(
                 accountResponse.getAccountId(),
@@ -108,44 +109,5 @@ public class CustomerService {
                 accountResponse.getStatus(),
                 customer.getStatus() != null ? customer.getStatus().getValue() : null
         );
-    }
-
-    private CustomerResponseDTO buildCustomerResponse(Customer customer) {
-        CustomerResponseDTO response = new CustomerResponseDTO();
-
-        response.setId(customer.getId());
-        response.setCustomerType(customer.getCustomerType());
-        response.setIdentificationType(customer.getIdentificationType());
-        response.setIdentification(customer.getIdentification());
-        response.setFirstName(customer.getFirstName());
-        response.setLastName(customer.getLastName());
-        response.setLegalName(customer.getLegalName());
-
-        String fullName;
-
-        if (customer.getLegalName() != null && !customer.getLegalName().isBlank()) {
-            fullName = customer.getLegalName();
-        } else {
-            String firstName = customer.getFirstName() != null ? customer.getFirstName() : "";
-            String lastName = customer.getLastName() != null ? customer.getLastName() : "";
-            fullName = (firstName + " " + lastName).trim();
-        }
-
-        response.setFullName(fullName);
-        response.setEmail(customer.getEmail());
-        response.setMobilePhone(customer.getMobilePhone());
-        response.setAddress(customer.getAddress());
-        response.setStatus(customer.getStatus());
-
-        return response;
-    }
-
-    private String buildFullName(Customer customer) {
-        if (customer.getCustomerType() != null && "JURIDICO".equals(customer.getCustomerType().getValue())) {
-            return customer.getLegalName();
-        }
-
-        return ((customer.getFirstName() != null ? customer.getFirstName() : "") + " " +
-                (customer.getLastName() != null ? customer.getLastName() : "")).trim();
     }
 }

@@ -2,6 +2,7 @@ package ec.edu.espe.banquito.party.service;
 
 import ec.edu.espe.banquito.party.dto.BranchRequestDTO;
 import ec.edu.espe.banquito.party.dto.BranchResponseDTO;
+import ec.edu.espe.banquito.party.mapper.BranchMapper;
 import ec.edu.espe.banquito.party.model.Branch;
 import ec.edu.espe.banquito.party.repository.BranchRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class BranchService {
     public List<BranchResponseDTO> findAll() {
         return this.branchRepository.findAll()
                 .stream()
-                .map(this::buildBranchResponse)
+                .map(BranchMapper::toResponse)
                 .toList();
     }
 
@@ -34,15 +35,6 @@ public class BranchService {
         branch.setCity(request.getCity());
         branch.setVersion(0);
 
-        return buildBranchResponse(this.branchRepository.save(branch));
-    }
-
-    private BranchResponseDTO buildBranchResponse(Branch branch) {
-        return new BranchResponseDTO(
-                branch.getId(),
-                branch.getBranchCode(),
-                branch.getName(),
-                branch.getCity()
-        );
+        return BranchMapper.toResponse(this.branchRepository.save(branch));
     }
 }

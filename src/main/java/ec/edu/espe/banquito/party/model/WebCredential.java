@@ -4,6 +4,8 @@ import ec.edu.espe.banquito.party.enums.CustomerStatusEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -28,6 +30,7 @@ public class WebCredential {
     @JoinColumn(name = "CUSTOMER_ID", nullable = false)
     private Customer customer;
 
+    @NaturalId
     @Column(name = "USERNAME", nullable = false, length = 50)
     private String username;
 
@@ -41,6 +44,7 @@ public class WebCredential {
     @Column(name = "STATUS", nullable = false, length = 15)
     private CustomerStatusEnum status;
 
+    @CreationTimestamp
     @Column(name = "CREATION_DATE", nullable = false)
     private LocalDateTime creationDate;
 

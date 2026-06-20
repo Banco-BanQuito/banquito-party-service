@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -47,7 +45,6 @@ public class CustomerService {
         customer.setAddress(request.getAddress());
         customer.setStatus(CustomerStatusEnum.ACTIVO);
         customer.setIsFavorite(false);
-        customer.setRegistrationDate(LocalDateTime.now());
         customer.setVersion(0);
 
         if (customer.getCustomerType() == CustomerTypeEnum.JURIDICO) {

@@ -3,6 +3,8 @@ package ec.edu.espe.banquito.party.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -23,6 +25,7 @@ public class Branch {
     @Column(name = "ID", nullable = false)
     private Integer id;
 
+    @NaturalId
     @Column(name = "BRANCH_CODE", nullable = false, length = 10)
     private String branchCode;
 
@@ -32,6 +35,7 @@ public class Branch {
     @Column(name = "CITY", nullable = false, length = 50)
     private String city;
 
+    @CreationTimestamp
     @Column(name = "CREATION_DATE", nullable = false)
     private LocalDateTime creationDate;
 

@@ -5,6 +5,8 @@ import ec.edu.espe.banquito.party.enums.CustomerTypeEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NaturalId;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +40,7 @@ public class Customer {
     @Column(name = "IDENTIFICATION_TYPE", nullable = false, length = 15)
     private String identificationType;
 
+    @NaturalId
     @Column(name = "IDENTIFICATION", nullable = false, length = 20)
     private String identification;
 
@@ -82,6 +85,7 @@ public class Customer {
     @Column(name = "IS_FAVORITE", nullable = false)
     private Boolean isFavorite;
 
+    @CreationTimestamp
     @Column(name = "REGISTRATION_DATE", nullable = false)
     private LocalDateTime registrationDate;
 

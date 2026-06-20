@@ -87,7 +87,6 @@ public class AuthService {
         credential.setUsername(customer.getIdentification());
         credential.setPasswordHash(passwordEncoder.encode(customer.getIdentification()));
         credential.setStatus(CustomerStatusEnum.ACTIVO);
-        credential.setCreationDate(LocalDateTime.now());
         // lastLogin queda null → mustChangePassword = true en el primer login
         return webCredentialRepository.save(credential);
     }

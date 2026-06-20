@@ -7,7 +7,6 @@ import ec.edu.espe.banquito.party.repository.BranchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -33,7 +32,6 @@ public class BranchService {
         branch.setBranchCode(request.getBranchCode());
         branch.setName(request.getName());
         branch.setCity(request.getCity());
-        branch.setCreationDate(LocalDateTime.now());
         branch.setVersion(0);
 
         return buildBranchResponse(this.branchRepository.save(branch));

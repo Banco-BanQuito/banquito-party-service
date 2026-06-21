@@ -14,7 +14,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v2/branches")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class BranchController {
 
     private final BranchService branchService;

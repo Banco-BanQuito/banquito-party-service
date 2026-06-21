@@ -15,10 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final ZoneId APP_ZONE = ZoneId.of("America/Guayaquil");
 
     private final WebCredentialRepository webCredentialRepository;
     private final CustomerRepository customerRepository;
@@ -41,7 +44,7 @@ public class AuthService {
         boolean mustChangePassword = (credential.getLastLogin() == null);
 
         if (!mustChangePassword) {
-            credential.setLastLogin(LocalDateTime.now());
+            credential.setLastLogin(LocalDateTime.now(APP_ZONE));
             webCredentialRepository.save(credential);
         }
 
@@ -68,7 +71,7 @@ public class AuthService {
         }
 
         credential.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        credential.setLastLogin(LocalDateTime.now());
+        credential.setLastLogin(LocalDateTime.now(APP_ZONE));
         webCredentialRepository.save(credential);
     }
 

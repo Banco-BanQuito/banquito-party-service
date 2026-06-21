@@ -29,6 +29,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
+    private static final LocalDateTime FIXED_PAST_LOGIN = LocalDateTime.of(2024, 1, 1, 0, 0, 0);
+
     @Mock
     private WebCredentialRepository webCredentialRepository;
 
@@ -57,7 +59,7 @@ class AuthServiceTest {
     void login_debeActualizarLastLogin_cuandoNoEsPrimerLogin() {
         Customer customer = buildCustomer(1, "0987654321", "Ana", "Herrera");
         WebCredential credential = buildCredential("0987654321", "pass123", CustomerStatusEnum.ACTIVO,
-                LocalDateTime.now().minusDays(1), customer);
+                FIXED_PAST_LOGIN, customer);
 
         when(webCredentialRepository.findByUsername("0987654321")).thenReturn(Optional.of(credential));
         when(webCredentialRepository.save(any())).thenReturn(credential);
@@ -100,7 +102,7 @@ class AuthServiceTest {
         customer.setCustomerType(CustomerTypeEnum.JURIDICO);
         customer.setLegalName("Empresa XYZ S.A.");
         WebCredential credential = buildCredential("1790000001001", "pass123", CustomerStatusEnum.ACTIVO,
-                LocalDateTime.now().minusDays(1), customer);
+                FIXED_PAST_LOGIN, customer);
 
         when(webCredentialRepository.findByUsername("1790000001001")).thenReturn(Optional.of(credential));
         when(webCredentialRepository.save(any())).thenReturn(credential);

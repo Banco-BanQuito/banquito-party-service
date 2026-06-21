@@ -12,5 +12,6 @@ public class ChangePasswordRequestDTO {
     private String newPassword;
 
     public ChangePasswordRequestDTO() {
+        // Constructor requerido por frameworks de serialización/deserialización.
     }
 }

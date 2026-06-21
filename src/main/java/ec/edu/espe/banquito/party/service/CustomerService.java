@@ -21,93 +21,96 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CustomerService {
 
-    private final CustomerRepository customerRepository;
-    private final CustomerSubtypeRepository customerSubtypeRepository;
-    private final AccountLookupGrpcClient accountLookupGrpcClient;
+private static final String CUSTOMER_NOT_FOUND_BY_ID = "Cliente no encontrado con id: ";
+private static final String CUSTOMER_NOT_FOUND_BY_IDENTIFICATION = "Cliente no encontrado con identificación: ";
 
-    @Transactional
-    public CustomerResponseDTO create(CustomerRequestDTO request) {
-        this.customerRepository.findByIdentification(request.getIdentification())
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("Ya existe un cliente con esa identificación");
-                });
+private final CustomerRepository customerRepository;
+private final CustomerSubtypeRepository customerSubtypeRepository;
+private final AccountLookupGrpcClient accountLookupGrpcClient;
 
-        CustomerSubtype subtype = this.customerSubtypeRepository.findById(request.getCustomerSubtypeId())
+@Transactional
+public CustomerResponseDTO create(CustomerRequestDTO request) {
+    this.customerRepository.findByIdentification(request.getIdentification())
+            .ifPresent(existing -> {
+                throw new IllegalArgumentException("Ya existe un cliente con esa identificación");
+            });
+
+    CustomerSubtype subtype = this.customerSubtypeRepository.findById(request.getCustomerSubtypeId())
+            .orElseThrow(() -> new IllegalArgumentException(
+                    "Subtipo de cliente no encontrado: " + request.getCustomerSubtypeId()));
+
+    Customer customer = new Customer();
+    customer.setCustomerSubtype(subtype);
+    customer.setCustomerType(CustomerTypeEnum.valueOf(request.getCustomerType()));
+    customer.setIdentificationType(request.getIdentificationType());
+    customer.setIdentification(request.getIdentification());
+    customer.setEmail(request.getEmail());
+    customer.setMobilePhone(request.getMobilePhone());
+    customer.setAddress(request.getAddress());
+    customer.setStatus(CustomerStatusEnum.ACTIVO);
+    customer.setIsFavorite(false);
+    customer.setVersion(0);
+
+    if (customer.getCustomerType() == CustomerTypeEnum.JURIDICO) {
+        customer.setLegalName(request.getLegalName());
+        customer.setConstitutionDate(request.getConstitutionDate());
+
+        Customer representative = this.customerRepository.findById(request.getLegalRepresentativeId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Subtipo de cliente no encontrado: " + request.getCustomerSubtypeId()));
-
-        Customer customer = new Customer();
-        customer.setCustomerSubtype(subtype);
-        customer.setCustomerType(CustomerTypeEnum.valueOf(request.getCustomerType()));
-        customer.setIdentificationType(request.getIdentificationType());
-        customer.setIdentification(request.getIdentification());
-        customer.setEmail(request.getEmail());
-        customer.setMobilePhone(request.getMobilePhone());
-        customer.setAddress(request.getAddress());
-        customer.setStatus(CustomerStatusEnum.ACTIVO);
-        customer.setIsFavorite(false);
-        customer.setVersion(0);
-
-        if (customer.getCustomerType() == CustomerTypeEnum.JURIDICO) {
-            customer.setLegalName(request.getLegalName());
-            customer.setConstitutionDate(request.getConstitutionDate());
-
-            Customer representative = this.customerRepository.findById(request.getLegalRepresentativeId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Representante legal no encontrado: " + request.getLegalRepresentativeId()));
-            customer.setLegalRepresentative(representative);
-        } else {
-            customer.setFirstName(request.getFirstName());
-            customer.setLastName(request.getLastName());
-            customer.setBirthDate(request.getBirthDate());
-        }
-
-        return CustomerMapper.toResponse(this.customerRepository.save(customer));
+                        "Representante legal no encontrado: " + request.getLegalRepresentativeId()));
+        customer.setLegalRepresentative(representative);
+    } else {
+        customer.setFirstName(request.getFirstName());
+        customer.setLastName(request.getLastName());
+        customer.setBirthDate(request.getBirthDate());
     }
 
-    @Transactional
-    public CustomerResponseDTO updateStatus(String id, String status) {
-        Customer customer = this.customerRepository.findById(Integer.valueOf(id))
-                .orElseThrow(() -> new CustomerNotFoundException("Cliente no encontrado con id: " + id));
+    return CustomerMapper.toResponse(this.customerRepository.save(customer));
+}
 
-        customer.setStatus(CustomerStatusEnum.valueOf(status));
+@Transactional
+public CustomerResponseDTO updateStatus(String id, String status) {
+    Customer customer = this.customerRepository.findById(Integer.valueOf(id))
+            .orElseThrow(() -> new CustomerNotFoundException(CUSTOMER_NOT_FOUND_BY_ID + id));
 
-        return CustomerMapper.toResponse(this.customerRepository.save(customer));
+    customer.setStatus(CustomerStatusEnum.valueOf(status));
+
+    return CustomerMapper.toResponse(this.customerRepository.save(customer));
+}
+
+public CustomerResponseDTO findByIdOrIdentification(String value) {
+    Customer customer;
+
+    if (value.matches("\\d+") && value.length() <= 6) {
+        Integer id = Integer.valueOf(value);
+        customer = this.customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerNotFoundException(CUSTOMER_NOT_FOUND_BY_ID + value));
+    } else {
+        customer = this.customerRepository.findByIdentification(value)
+                .orElseThrow(() -> new CustomerNotFoundException(CUSTOMER_NOT_FOUND_BY_IDENTIFICATION + value));
     }
 
-    public CustomerResponseDTO findByIdOrIdentification(String value) {
-        Customer customer;
+    return CustomerMapper.toResponse(customer);
+}
 
-        if (value.matches("\\d+") && value.length() <= 6) {
-            Integer id = Integer.valueOf(value);
-            customer = this.customerRepository.findById(id)
-                    .orElseThrow(() -> new CustomerNotFoundException("Cliente no encontrado con id: " + value));
-        } else {
-            customer = this.customerRepository.findByIdentification(value)
-                    .orElseThrow(() -> new CustomerNotFoundException("Cliente no encontrado con identificación: " + value));
-        }
+public CustomerByAccountResponseDTO findCustomerByAccountNumber(String accountNumber) {
+    AccountLookupResponse accountResponse = this.accountLookupGrpcClient.getAccountByNumber(accountNumber);
 
-        return CustomerMapper.toResponse(customer);
-    }
+    Integer customerId = Math.toIntExact(accountResponse.getCustomerId());
 
-    public CustomerByAccountResponseDTO findCustomerByAccountNumber(String accountNumber) {
-        AccountLookupResponse accountResponse = this.accountLookupGrpcClient.getAccountByNumber(accountNumber);
+    Customer customer = this.customerRepository.findById(customerId)
+            .orElseThrow(() -> new CustomerNotFoundException(CUSTOMER_NOT_FOUND_BY_ID + customerId));
 
-        Integer customerId = Math.toIntExact(accountResponse.getCustomerId());
+    String fullName = CustomerMapper.buildFullName(customer);
 
-        Customer customer = this.customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException("Cliente no encontrado con id: " + customerId));
-
-        String fullName = CustomerMapper.buildFullName(customer);
-
-        return new CustomerByAccountResponseDTO(
-                accountResponse.getAccountId(),
-                accountResponse.getAccountNumber(),
-                customer.getId(),
-                fullName,
-                customer.getCustomerType() != null ? customer.getCustomerType().getValue() : null,
-                accountResponse.getStatus(),
-                customer.getStatus() != null ? customer.getStatus().getValue() : null
-        );
-    }
+    return new CustomerByAccountResponseDTO(
+            accountResponse.getAccountId(),
+            accountResponse.getAccountNumber(),
+            customer.getId(),
+            fullName,
+            customer.getCustomerType() != null ? customer.getCustomerType().getValue() : null,
+            accountResponse.getStatus(),
+            customer.getStatus() != null ? customer.getStatus().getValue() : null
+    );
+}
 }

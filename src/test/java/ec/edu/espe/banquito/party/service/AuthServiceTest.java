@@ -75,7 +75,9 @@ class AuthServiceTest {
 
         when(webCredentialRepository.findByUsername("0987654321")).thenReturn(Optional.of(credential));
 
-        assertThatThrownBy(() -> authService.login(buildLoginRequest("0987654321", "pass123")))
+        AuthLoginRequestDTO request = buildLoginRequest("0987654321", "pass123");
+
+        assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 
@@ -86,7 +88,9 @@ class AuthServiceTest {
 
         when(webCredentialRepository.findByUsername("0987654321")).thenReturn(Optional.of(credential));
 
-        assertThatThrownBy(() -> authService.login(buildLoginRequest("0987654321", "wrong")))
+        AuthLoginRequestDTO request = buildLoginRequest("0987654321", "wrong");
+
+        assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 

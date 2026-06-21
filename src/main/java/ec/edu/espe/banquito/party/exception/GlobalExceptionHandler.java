@@ -9,14 +9,19 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String TIMESTAMP = "timestamp";
+    private static final String STATUS = "status";
+    private static final String ERROR = "error";
+    private static final String MESSAGE = "message";
+
     @ExceptionHandler(CustomerNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, Object> handleCustomerNotFound(CustomerNotFoundException exception) {
         return Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", 404,
-                "error", "NOT_FOUND",
-                "message", exception.getMessage()
+                TIMESTAMP, LocalDateTime.now(),
+                STATUS, 404,
+                ERROR, "NOT_FOUND",
+                MESSAGE, exception.getMessage()
         );
     }
 
@@ -24,10 +29,10 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Map<String, Object> handleInvalidCredentials(InvalidCredentialsException exception) {
         return Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", 401,
-                "error", "UNAUTHORIZED",
-                "message", exception.getMessage()
+                TIMESTAMP, LocalDateTime.now(),
+                STATUS, 401,
+                ERROR, "UNAUTHORIZED",
+                MESSAGE, exception.getMessage()
         );
     }
 
@@ -35,10 +40,10 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, Object> handleIllegalArgument(IllegalArgumentException exception) {
         return Map.of(
-                "timestamp", LocalDateTime.now(),
-                "status", 400,
-                "error", "BAD_REQUEST",
-                "message", exception.getMessage()
+                TIMESTAMP, LocalDateTime.now(),
+                STATUS, 400,
+                ERROR, "BAD_REQUEST",
+                MESSAGE, exception.getMessage()
         );
     }
 }

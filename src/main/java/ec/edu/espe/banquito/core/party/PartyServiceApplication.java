@@ -15,6 +15,7 @@ public class PartyServiceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(PartyServiceApplication.class, args);
+		System.out.println("CI/CD backend validation: party-service started");
 	}
 
 	@Bean

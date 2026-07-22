@@ -14,9 +14,12 @@ public class IdentityPlatformService {
 
     private final RestClient restClient;
     private final String apiKey;
+    private final String defaultPassword;
 
-    public IdentityPlatformService(@Value("${app.identity-platform.api-key}") String apiKey) {
+    public IdentityPlatformService(@Value("${app.identity-platform.api-key}") String apiKey,
+                                   @Value("${app.identity-platform.default-password}") String defaultPassword) {
         this.apiKey = apiKey;
+        this.defaultPassword = defaultPassword;
         this.restClient = RestClient.create();
     }
 
@@ -29,7 +32,7 @@ public class IdentityPlatformService {
                     .uri(SIGN_UP_URL + "?key=" + this.apiKey)
                     .body(Map.of(
                             "email", email,
-                            "password", identification,
+                            "password", this.defaultPassword,
                             "displayName", safeDisplayName,
                             "returnSecureToken", false
                     ))

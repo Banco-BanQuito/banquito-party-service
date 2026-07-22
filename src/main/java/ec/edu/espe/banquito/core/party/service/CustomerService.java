@@ -27,6 +27,7 @@ private static final String CUSTOMER_NOT_FOUND_BY_IDENTIFICATION = "Cliente no e
 private final CustomerRepository customerRepository;
 private final CustomerSubtypeRepository customerSubtypeRepository;
 private final AccountLookupGrpcClient accountLookupGrpcClient;
+private final IdentityPlatformService identityPlatformService;
 
 @Transactional
 public CustomerResponseDTO create(CustomerRequestDTO request) {
@@ -65,7 +66,13 @@ public CustomerResponseDTO create(CustomerRequestDTO request) {
         customer.setBirthDate(request.getBirthDate());
     }
 
-    return CustomerMapper.toResponse(this.customerRepository.save(customer));
+    Customer savedCustomer = this.customerRepository.save(customer);
+
+    this.identityPlatformService.createAccount(
+            savedCustomer.getIdentification(),
+            CustomerMapper.buildFullName(savedCustomer));
+
+    return CustomerMapper.toResponse(savedCustomer);
 }
 
 @Transactional

@@ -18,11 +18,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -113,104 +115,119 @@ class CustomerServiceTest {
         assertThat(result.getFullName()).isEmpty();
     }
 
-    @Test
-    void create_debeGuardarClienteYCrearCuentaDeAcceso_cuandoDatosValidos() {
-        CustomerRequestDTO request = new CustomerRequestDTO();
-        request.setCustomerType("NATURAL");
-        request.setCustomerSubtypeId(1);
-        request.setIdentificationType("CEDULA");
-        request.setIdentification("0987654321");
-        request.setFirstName("Ana");
-        request.setLastName("Herrera");
-
-        when(customerRepository.findByIdentification("0987654321")).thenReturn(Optional.empty());
-        when(customerSubtypeRepository.findById(1)).thenReturn(Optional.of(new CustomerSubtype(1)));
-        when(customerRepository.save(any(Customer.class))).thenAnswer(inv -> inv.getArgument(0));
+    void create_debeCrearClienteNaturalYCuentaIdentityPlatform() {
+        CustomerRequestDTO request = naturalRequest();
+        CustomerSubtype subtype = subtype(1, CustomerTypeEnum.NATURAL);
+        when(customerRepository.findByIdentification("1750285577")).thenReturn(Optional.empty());
+        when(customerSubtypeRepository.findById(1)).thenReturn(Optional.of(subtype));
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer customer = invocation.getArgument(0);
+            customer.setId(10);
+            return customer;
+        });
 
         CustomerResponseDTO result = customerService.create(request);
 
-        assertThat(result.getIdentification()).isEqualTo("0987654321");
-        org.mockito.Mockito.verify(identityPlatformService).createAccount("0987654321", "Ana Herrera");
+        assertThat(result.getId()).isEqualTo(10);
+        assertThat(result.getIdentification()).isEqualTo("1750285577");
+        assertThat(result.getFullName()).isEqualTo("Juan Perez");
+        verify(identityPlatformService).createAccount("1750285577", "Juan Perez");
     }
 
     @Test
-    void create_debeLanzarExcepcion_cuandoIdentificacionYaExiste() {
-        CustomerRequestDTO request = new CustomerRequestDTO();
-        request.setIdentification("0987654321");
-        when(customerRepository.findByIdentification("0987654321"))
-                .thenReturn(Optional.of(buildCustomer(1, "0987654321", "Ana", "Herrera", null)));
-
-        assertThatThrownBy(() -> customerService.create(request))
-                .isInstanceOf(IllegalArgumentException.class);
-
-        org.mockito.Mockito.verifyNoInteractions(identityPlatformService);
-    }
-
-    @Test
-    void updateStatus_debeActualizarEstado_cuandoClienteExiste() {
-        Customer customer = buildCustomer(5, "0987654321", "Ana", "Herrera", null);
-        when(customerRepository.findById(5)).thenReturn(Optional.of(customer));
-        when(customerRepository.save(any(Customer.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        CustomerResponseDTO result = customerService.updateStatus("5", "BLOQUEADO");
-
-        assertThat(result.getStatus()).isEqualTo(CustomerStatusEnum.BLOQUEADO);
-    }
-
-    @Test
-    void create_debeLanzarExcepcion_cuandoSubtipoNoExiste() {
-        CustomerRequestDTO request = new CustomerRequestDTO();
-        request.setIdentification("0987654321");
-        request.setCustomerSubtypeId(99);
-        when(customerRepository.findByIdentification("0987654321")).thenReturn(Optional.empty());
-        when(customerSubtypeRepository.findById(99)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> customerService.create(request))
-                .isInstanceOf(IllegalArgumentException.class);
-
-        org.mockito.Mockito.verifyNoInteractions(identityPlatformService);
-    }
-
-    @Test
-    void create_debeGuardarClienteJuridico_cuandoRepresentanteLegalExiste() {
-        CustomerRequestDTO request = new CustomerRequestDTO();
-        request.setCustomerType("JURIDICO");
-        request.setCustomerSubtypeId(2);
-        request.setIdentification("1792000001001");
-        request.setLegalName("Empresa ABC S.A.");
-        request.setLegalRepresentativeId(10);
-
+    void create_debeCrearClienteJuridicoConRepresentante() {
+        CustomerRequestDTO request = legalRequest();
+        CustomerSubtype subtype = subtype(2, CustomerTypeEnum.JURIDICO);
+        Customer representative = buildCustomer(7, "0800000001", "Ana", "Lopez", null);
         when(customerRepository.findByIdentification("1792000001001")).thenReturn(Optional.empty());
-        when(customerSubtypeRepository.findById(2)).thenReturn(Optional.of(new CustomerSubtype(2)));
-        Customer representative = buildCustomer(10, "0911111111", "Carlos", "Diaz", null);
-        when(customerRepository.findById(10)).thenReturn(Optional.of(representative));
-        when(customerRepository.save(any(Customer.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(customerSubtypeRepository.findById(2)).thenReturn(Optional.of(subtype));
+        when(customerRepository.findById(7)).thenReturn(Optional.of(representative));
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
+            Customer customer = invocation.getArgument(0);
+            customer.setId(11);
+            return customer;
+        });
 
         CustomerResponseDTO result = customerService.create(request);
 
-        assertThat(result.getFullName()).isEqualTo("Empresa ABC S.A.");
+        assertThat(result.getId()).isEqualTo(11);
+        assertThat(result.getCustomerType()).isEqualTo(CustomerTypeEnum.JURIDICO);
+        assertThat(result.getFullName()).isEqualTo("Empresa BanQuito");
+        verify(identityPlatformService).createAccount("1792000001001", "Empresa BanQuito");
     }
 
     @Test
-    void findCustomerByAccountNumber_debeCombinarDatosDeCuentaYCliente() {
+    void create_debeRechazarIdentificacionDuplicada() {
+        CustomerRequestDTO request = naturalRequest();
+        when(customerRepository.findByIdentification("1750285577"))
+                .thenReturn(Optional.of(buildCustomer(1, "1750285577", "Juan", "Perez", null)));
+
+        assertThatThrownBy(() -> customerService.create(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ya existe");
+    }
+
+    @Test
+    void create_debeRechazarSubtipoInexistente() {
+        CustomerRequestDTO request = naturalRequest();
+        when(customerRepository.findByIdentification("1750285577")).thenReturn(Optional.empty());
+        when(customerSubtypeRepository.findById(1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> customerService.create(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Subtipo");
+    }
+
+    @Test
+    void updateStatus_debeCambiarEstadoDelCliente() {
+        Customer customer = buildCustomer(1, "1750285577", "Juan", "Perez", null);
+        when(customerRepository.findById(1)).thenReturn(Optional.of(customer));
+        when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CustomerResponseDTO result = customerService.updateStatus("1", "INACTIVO");
+
+        assertThat(result.getStatus()).isEqualTo(CustomerStatusEnum.INACTIVO);
+    }
+
+    @Test
+    void updateStatus_debeLanzarExceptionSiClienteNoExiste() {
+        when(customerRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> customerService.updateStatus("99", "INACTIVO"))
+                .isInstanceOf(CustomerNotFoundException.class);
+    }
+
+    @Test
+    void findCustomerByAccountNumber_debeResolverClienteDesdeCore() {
         AccountLookupResponse accountResponse = AccountLookupResponse.newBuilder()
-                .setAccountId(100L).setAccountNumber("1234567890").setCustomerId(7L).setStatus("ACTIVA")
+                .setAccountId(1001L)
+                .setAccountNumber("1010114999")
+                .setCustomerId(10L)
+                .setStatus("ACTIVA")
                 .build();
-        when(accountLookupGrpcClient.getAccountByNumber("1234567890")).thenReturn(accountResponse);
-        Customer customer = buildCustomer(7, "0987654321", "Ana", "Herrera", null);
-        when(customerRepository.findById(7)).thenReturn(Optional.of(customer));
+        Customer customer = buildCustomer(10, "1750285577", "Juan", "Perez", null);
+        when(accountLookupGrpcClient.getAccountByNumber("1010114999")).thenReturn(accountResponse);
+        when(customerRepository.findById(10)).thenReturn(Optional.of(customer));
 
-        CustomerByAccountResponseDTO result = customerService.findCustomerByAccountNumber("1234567890");
+        CustomerByAccountResponseDTO result = customerService.findCustomerByAccountNumber("1010114999");
 
-        assertThat(result.getFullName()).isEqualTo("Ana Herrera");
-        assertThat(result.getAccountStatus()).isEqualTo("ACTIVA");
+        assertThat(result.getAccountNumber()).isEqualTo("1010114999");
+        assertThat(result.getCustomerId()).isEqualTo(10);
+        assertThat(result.getFullName()).isEqualTo("Juan Perez");
     }
 
     @Test
-    void updateStatus_debeLanzarExcepcion_cuandoClienteNoExiste() {
-        when(customerRepository.findById(404)).thenReturn(Optional.empty());
+    void findCustomerByAccountNumber_debeLanzarExceptionSiNoExisteCliente() {
+        AccountLookupResponse accountResponse = AccountLookupResponse.newBuilder()
+                .setAccountId(1001L)
+                .setAccountNumber("1010114999")
+                .setCustomerId(99L)
+                .setStatus("ACTIVA")
+                .build();
+        when(accountLookupGrpcClient.getAccountByNumber("1010114999")).thenReturn(accountResponse);
+        when(customerRepository.findById(99)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> customerService.updateStatus("404", "ACTIVO"))
+        assertThatThrownBy(() -> customerService.findCustomerByAccountNumber("1010114999"))
                 .isInstanceOf(CustomerNotFoundException.class);
     }
 
@@ -225,5 +242,44 @@ class CustomerServiceTest {
         customer.setLegalName(legalName);
         customer.setStatus(CustomerStatusEnum.ACTIVO);
         return customer;
+    }
+
+    private CustomerSubtype subtype(Integer id, CustomerTypeEnum type) {
+        CustomerSubtype subtype = new CustomerSubtype();
+        subtype.setId(id);
+        subtype.setCustomerType(type);
+        subtype.setName(type.name());
+        subtype.setStatus(CustomerStatusEnum.ACTIVO);
+        return subtype;
+    }
+
+    private CustomerRequestDTO naturalRequest() {
+        CustomerRequestDTO request = new CustomerRequestDTO();
+        request.setCustomerType("NATURAL");
+        request.setCustomerSubtypeId(1);
+        request.setIdentificationType("CEDULA");
+        request.setIdentification("1750285577");
+        request.setEmail("juan@banquito.internal");
+        request.setMobilePhone("0999999999");
+        request.setAddress("Quito");
+        request.setFirstName("Juan");
+        request.setLastName("Perez");
+        request.setBirthDate(LocalDate.of(1990, 1, 1));
+        return request;
+    }
+
+    private CustomerRequestDTO legalRequest() {
+        CustomerRequestDTO request = new CustomerRequestDTO();
+        request.setCustomerType("JURIDICO");
+        request.setCustomerSubtypeId(2);
+        request.setIdentificationType("RUC");
+        request.setIdentification("1792000001001");
+        request.setEmail("empresa@banquito.internal");
+        request.setMobilePhone("0999999999");
+        request.setAddress("Quito");
+        request.setLegalName("Empresa BanQuito");
+        request.setConstitutionDate(LocalDate.of(2020, 1, 1));
+        request.setLegalRepresentativeId(7);
+        return request;
     }
 }

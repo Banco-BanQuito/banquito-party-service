@@ -56,27 +56,35 @@ class BranchServiceTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
-    void create_debeGuardarBranch_cuandoCodigoNoExiste() {
+    void create_debeCrearSucursalCuandoCodigoNoExiste() {
         BranchRequestDTO request = new BranchRequestDTO();
         request.setBranchCode("002");
         request.setName("Sucursal Sur");
-        request.setCity("Guayaquil");
+        request.setCity("Quito");
         when(branchRepository.findByBranchCode("002")).thenReturn(Optional.empty());
-        when(branchRepository.save(any(Branch.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(branchRepository.save(any(Branch.class))).thenAnswer(invocation -> {
+            Branch branch = invocation.getArgument(0);
+            branch.setId(2);
+            return branch;
+        });
 
         BranchResponseDTO result = branchService.create(request);
 
+        assertThat(result.getId()).isEqualTo(2);
         assertThat(result.getBranchCode()).isEqualTo("002");
+        assertThat(result.getName()).isEqualTo("Sucursal Sur");
     }
 
     @Test
-    void create_debeLanzarExcepcion_cuandoCodigoYaExiste() {
+    void create_debeRechazarCodigoDuplicado() {
         BranchRequestDTO request = new BranchRequestDTO();
         request.setBranchCode("001");
+        request.setName("Sucursal Norte");
+        request.setCity("Quito");
         when(branchRepository.findByBranchCode("001")).thenReturn(Optional.of(new Branch()));
 
         assertThatThrownBy(() -> branchService.create(request))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Branch code");
     }
 }

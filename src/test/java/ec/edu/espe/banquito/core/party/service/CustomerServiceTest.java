@@ -115,6 +115,7 @@ class CustomerServiceTest {
         assertThat(result.getFullName()).isEmpty();
     }
 
+    @Test
     void create_debeCrearClienteNaturalYCuentaIdentityPlatform() {
         CustomerRequestDTO request = naturalRequest();
         CustomerSubtype subtype = subtype(1, CustomerTypeEnum.NATURAL);
@@ -154,6 +155,19 @@ class CustomerServiceTest {
         assertThat(result.getCustomerType()).isEqualTo(CustomerTypeEnum.JURIDICO);
         assertThat(result.getFullName()).isEqualTo("Empresa BanQuito");
         verify(identityPlatformService).createAccount("1792000001001", "Empresa BanQuito");
+    }
+
+    @Test
+    void create_debeRechazarRepresentanteLegalInexistente() {
+        CustomerRequestDTO request = legalRequest();
+        CustomerSubtype subtype = subtype(2, CustomerTypeEnum.JURIDICO);
+        when(customerRepository.findByIdentification("1792000001001")).thenReturn(Optional.empty());
+        when(customerSubtypeRepository.findById(2)).thenReturn(Optional.of(subtype));
+        when(customerRepository.findById(7)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> customerService.create(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Representante legal");
     }
 
     @Test

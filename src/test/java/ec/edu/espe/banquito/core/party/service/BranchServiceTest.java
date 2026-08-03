@@ -56,6 +56,7 @@ class BranchServiceTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
     void create_debeCrearSucursalCuandoCodigoNoExiste() {
         BranchRequestDTO request = new BranchRequestDTO();
         request.setBranchCode("002");
